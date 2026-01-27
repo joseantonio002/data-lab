@@ -1,0 +1,68 @@
+Creamos un índice
+
+curl -X PUT "valencia3.inf.um.es:9200/documents_index2" -H 'Content-Type: application/json' -d'
+{
+"mappings": {
+	"properties": {
+                "id": {"type": "keyword"},
+                "path": {"type": "keyword"},
+                "title": {"type": "text"},
+                "text": {"type": "text"}
+         }
+}
+}'
+
+
+Insertamos documentos
+
+curl -X PUT "valencia3.inf.um.es:9200/documents_index2/_doc/1" -H 'Content-Type: application/json' -d'
+    {
+            "id": "1",
+            "path": "1.txt",
+            "title": "Entrega de los primeros dos ejercicios evaluables",
+            "text": "En el aulavirtual están los dos primeros ejercicios evaluables en la sección tareas"
+    }'
+
+curl -X PUT "valencia3.inf.um.es:9200/documents_index2/_doc/2" -H 'Content-Type: application/json' -d'
+    {
+            "id": "2",
+            "path": "2.txt",
+            "title": "Ya podéis realizar la primera práctica evaluable hasta 3 puntos",
+            "text": "Con la clase práctica hoy de Scrapy ya podéis empezar a realizar la primera práctica evaluable hasta 3 puntos de la asignatura. Se entregarán a través de tareas"
+    }'
+
+Buscamos
+
+curl -X GET "valencia3.inf.um.es:9200/documents_index2/_search" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match": {
+      "text": "aulavirtual"
+    }
+  }
+}'
+
+
+curl -X GET "valencia3.inf.um.es:9200/documents_index2/_search" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match": {
+      "text": "aulavirtual"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "text": {}
+    }
+  }
+}'
+
+Listamos todos los índices
+curl -X GET "http://valencia3.inf.um.es:9200/_cat/indices?v"
+
+Eliminamos un índice
+curl -X DELETE "http://valencia3.inf.um.es:9200/documents_index2"
+
+
+
+curl -X DELETE "http://valencia3.inf.um.es:9200/_all"
