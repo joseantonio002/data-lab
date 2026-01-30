@@ -17,11 +17,6 @@
 - **Python 3 + virtualenv**: `python3 -m venv ~/.venv`, activation via `. ~/.venv/bin/activate`, and `CLASSPATH="$(hadoop classpath --glob):$CLASSPATH"` so PyArrow can load Hadoop jars.
 - **Test data**: sample text files (`a.txt`, `t.txt`) live in `/user/luser` on HDFS; administrative commands operate over the entire namespace (`hdfs dfs -put`, `hdfs dfsadmin -setQuota`).
 
-## Evidence Placeholders (add images later)
-- ![Filesystem cat execution placeholder](images/pr2_filesystem_cat.png)
-- ![Quota enforcement placeholder](images/pr2_quota.png)
-- ![fsck under-replication placeholder](images/pr2_fsck.png)
-
 ## Technologies & Theory in Action
 - **HDFS as a distributed filesystem**: `filesystem_cat.py` uses `FileSystem.from_uri` to hide protocol differences and stream data regardless of physical block placement, showcasing HDFS’s POSIX-like façade over replicated 128 MB blocks.
 - **Namespaces & quotas**: the four-inode limit from `tcdm_pr2.pdf` highlights that the directory itself consumes quota, clarifying the distinction between namespace and space quotas.

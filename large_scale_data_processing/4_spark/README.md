@@ -23,10 +23,71 @@
 - **Single-file outputs**: `write_single_parquet` and `write_single_csv` write to a temporary directory with `coalesce(1)`, rename `part-*.parquet/csv` to the requested filename, and clean `_SUCCESS`/`.crc` leftovers.
 - **Data**: original Parquet datasets (`Posts`, `Users`, `Comments`) come from GitHub Releases; intermediates live alongside the scripts for reuse in later exercises.
 
-## Evidence Placeholders (add images later)
-- ![Spark job execution placeholder](images/pr4_execution.png)
-- ![Ranking output placeholder](images/pr4_ranking.png)
-- ![YoY delta output placeholder](images/pr4_deltas.png)
+## A brief summary of spark fundamentals
+
+Apache Spark is a framework for large-scale data processing that can run either **distributed (on a cluster)** or **locally (on a single machine)**. It is mainly used for batch analytics, but also supports streaming and machine learning workloads. Spark emerged as an alternative to MapReduce, improving performance by avoiding rigid multi-stage execution and excessive disk I/O. Instead, Spark builds **Directed Acyclic Graphs (DAGs)** of operations and optimizes them before execution, keeping data in memory when possible (though disk is still used during shuffles or when data does not fit in RAM).
+
+### Spark architecture
+
+A Spark application is composed of the following main components:
+
+* **Driver**: the process that runs the user program. It creates the execution plan (logical DAG → physical plan), coordinates the job, and schedules tasks.
+* **Executors**: worker processes that execute tasks on data partitions and provide in-memory storage for intermediate results.
+* **Cluster Manager**: allocates resources and manages executors (Standalone, YARN, Kubernetes; Mesos is now deprecated).
+
+Spark runs on the **JVM** (Scala/Java), which is why a Java JDK is required even when using PySpark.
+
+### PySpark execution model
+
+PySpark is the Python API for Spark. When running a PySpark script:
+
+1. The **Driver program** (your Python script) starts.
+2. A **SparkSession** is created (the main entry point to Spark functionality).
+3. Spark internally uses a **SparkContext** to connect to the cluster.
+4. Data is represented as distributed **DataFrames** (or lower-level RDDs).
+5. Executors run tasks in parallel on data partitions and return results to the Driver.
+
+For modern Spark development, **DataFrames and Spark SQL** are recommended over RDDs due to better optimization and readability.
+
+### Core concepts
+
+**Lazy evaluation**
+Transformations (e.g., `select`, `filter`, `groupBy`) do not execute immediately. Spark waits until an **action** (e.g., `count`, `show`, `write`) is called, allowing it to optimize the entire pipeline.
+
+**DAG and optimization**
+Spark builds a logical DAG of transformations and optimizes it using the Catalyst optimizer before generating a physical execution plan.
+
+**Partitions**
+DataFrames are divided into partitions, which define the unit of parallelism. Performance and scalability depend heavily on how data is partitioned.
+
+**Transformations: narrow vs. wide**
+
+* **Narrow transformations** (e.g., `filter`, `select`) for each partition you create another partition, for example .where(). To perform where() you only need to check each partition, you dont need to compare partitions with each other. With narrow transformations, Spark will automatically perform an operation called pipelining, meaning that if we specify multiple filters on DataFrames, they’ll all be performed in-memory.
+
+* **Wide transformations** (e.g., `groupBy`, `sort`, some joins) A wide dependency (or wide transformation) style transformation will have input partitions
+contributing to many output partitions. You will often hear this referred to as a shuffle whereby Spark will exchange partitions across the cluster. When we perform a shuffle, Spark writes the results to disk. For example sort(). 
+
+![sort](./sortspark.png)
+
+
+**Actions**
+Actions trigger execution and fall into three categories:
+
+* Display results (e.g., `show`)
+* Collect data to the driver (`collect`, `toPandas`) — only safe for small results
+* Write data to storage (`write.csv`, `write.parquet`)
+
+A **Spark job** is defined as the set of transformations executed as a result of a single action.
+
+### Practical usage patterns
+
+* Prefer `functions.col()` for column access instead of dot or bracket notation.
+* Use `alias()` when joining DataFrames to avoid ambiguity.
+* Expect shuffles in `groupBy`, `sort`, and some joins, and design pipelines accordingly.
+* Avoid bringing large datasets back to Python; keep computation inside Spark.
+* Spark’s default behavior of writing multiple `part-*` files reflects its distributed nature.
+
+Overall, Spark’s strength lies in its ability to express complex analytical pipelines declaratively while efficiently executing them in parallel through DAG optimization, lazy evaluation, and partition-aware execution.
 
 ## Technologies & Theory in Action
 - **Apache Spark DAGs**: each script builds a `SparkSession`, applies DataFrame transformations (`filter`, `select`, `groupBy`, `agg`, `join`), and defers actions (`write`) until the end, benefiting from Catalyst optimizations and lazy evaluation.

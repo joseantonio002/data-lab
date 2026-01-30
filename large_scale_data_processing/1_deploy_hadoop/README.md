@@ -5,20 +5,11 @@
 - From that base, deployed a NameNode/ResourceManager reachable on ports 9870/8088, initialized its metadata directories, and validated the installation with `hadoop-mapreduce-examples`.
 - Extended the initial layout (1 NameNode + 4 DataNodes) by adding a BackupNode and the YARN TimelineServer, tested adding/removing DataNodes/NodeManagers, and enabled rack awareness to prove fault tolerance and balanced replica placement.
 
-## Supporting Files
-- `p1.ipynb`: notebook with the reproducible build/configuration sequence.
-- `tcdm_pr1.pdf`: report containing the evidence screenshots (BackupNode checkpoints, TimelineServer views, node add/remove operations, rack-aware topology).
-
 ## Runtime Environment
 - **Dockerized cluster**: everything runs on a Linux host with Docker Engine; every Hadoop role is a container attached to the custom `hadoop-cluster` network described in `p1.ipynb`.
 - **`hadoop-base` image**: derived from `ubuntu:latest`, adds OpenJDK 8, Python 3, Maven, locale settings, and Hadoop itself; finalized via `docker container commit hadoop-install hadoop-base`.
 - **Users and permissions**: `hdadmin` owns the Hadoop daemons, while `luser` submits MapReduce jobs. NameNode data directories (`/var/data/hdfs/namenode`) are prepared with `chown hdadmin:hadoop` to avoid permission issues.
 - **Exposed services**: NameNode (`namenode:9000/9870`), ResourceManager (`resourcemanager:8088`), BackupNode UI, and TimelineServer endpoints (all captured inside the PDF).
-
-## Evidence Placeholders (add images later)
-- ![BackupNode checkpoint placeholder](images/pr1_backupnode.png)
-- ![TimelineServer execution placeholder](images/pr1_timelineserver.png)
-- ![Rack-aware topology placeholder](images/pr1_rackaware.png)
 
 ## Technologies & Theory in Action
 - **Hadoop coordination**: tuned `core-site.xml` (default FS, temp dirs) and `mapred-site.xml` (`mapreduce.framework.name=yarn`) so every job launched by `luser` routes through YARN.
